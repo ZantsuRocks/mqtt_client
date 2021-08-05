@@ -13,8 +13,7 @@ class MqttServerConnection extends MqttConnectionBase {
   MqttServerConnection(clientEventBus) : super(clientEventBus);
 
   /// Initializes a new instance of the MqttConnection class.
-  MqttServerConnection.fromConnect(server, port, clientEventBus)
-      : super(clientEventBus) {
+  MqttServerConnection.fromConnect(server, port, clientEventBus) : super(clientEventBus) {
     connect(server, port);
   }
 
@@ -33,13 +32,16 @@ class MqttServerConnection extends MqttConnectionBase {
   }
 
   /// Create the listening stream subscription and subscribe the callbacks
-  void _startListening() {
+  StreamSubscription<Uint8List> _startListening() {
+    StreamSubscription<Uint8List> tmp;
     MqttLogger.log('MqttServerConnection::_startListening');
     try {
-      client.listen(_onData, onError: onError, onDone: onDone);
-    } on Exception catch (e) {
+      tmp = client.listen(_onData, onError: onError, onDone: onDone);
+    } catch (e) {
       print('MqttServerConnection::_startListening - exception raised $e');
+      rethrow;
     }
+    return tmp;
   }
 
   /// OnData listener callback
@@ -60,8 +62,7 @@ class MqttServerConnection extends MqttConnectionBase {
       try {
         msg = MqttMessage.createFrom(messageStream);
       } on Exception {
-        MqttLogger.log(
-            'MqttServerConnection::_ondata - message is not yet valid, '
+        MqttLogger.log('MqttServerConnection::_ondata - message is not yet valid, '
             'waiting for more data ...');
         messageIsValid = false;
       }
@@ -71,19 +72,16 @@ class MqttServerConnection extends MqttConnectionBase {
       }
       if (messageIsValid) {
         messageStream.shrink();
-        MqttLogger.log(
-            'MqttServerConnection::_onData - message received ', msg);
+        MqttLogger.log('MqttServerConnection::_onData - message received ', msg);
         if (!clientEventBus!.streamController.isClosed) {
           if (msg!.header!.messageType == MqttMessageType.connectAck) {
             clientEventBus!.fire(ConnectAckMessageAvailable(msg));
           } else {
             clientEventBus!.fire(MessageAvailable(msg));
           }
-          MqttLogger.log(
-              'MqttServerConnection::_onData - message available event fired');
+          MqttLogger.log('MqttServerConnection::_onData - message available event fired');
         } else {
-          MqttLogger.log(
-              'MqttServerConnection::_onData - WARN - message available event not fired, event bus is closed');
+          MqttLogger.log('MqttServerConnection::_onData - WARN - message available event not fired, event bus is closed');
         }
       }
     }

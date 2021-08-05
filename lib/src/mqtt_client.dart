@@ -88,13 +88,10 @@ class MqttClient {
   /// Has no effect if [manuallyAcknowledgeQos1] is not in force
   /// or the message is not awaiting a QOS 1 acknowledge.
   /// Returns true if an acknowledgement is sent to the broker.
-  bool? acknowledgeQos1Message(MqttPublishMessage message) =>
-      publishingManager?.acknowledgeQos1Message(message);
+  bool? acknowledgeQos1Message(MqttPublishMessage message) => publishingManager?.acknowledgeQos1Message(message);
 
   /// The number of QOS 1 messages awaiting manual acknowledge.
-  int get messagesAwaitingManualAcknowledge => publishingManager == null
-      ? 0
-      : publishingManager!.awaitingManualAcknowledge.length;
+  int get messagesAwaitingManualAcknowledge => publishingManager == null ? 0 : publishingManager!.awaitingManualAcknowledge.length;
 
   /// The Handler that is managing the connection to the remote server.
   @protected
@@ -145,25 +142,19 @@ class MqttClient {
   /// Published message stream. A publish message is added to this
   /// stream on completion of the message publishing protocol for a Qos level.
   /// Attach listeners only after connect has been called.
-  Stream<MqttPublishMessage>? get published =>
-      publishingManager != null ? publishingManager!.published.stream : null;
+  Stream<MqttPublishMessage>? get published => publishingManager != null ? publishingManager!.published.stream : null;
 
   /// Gets the current connection state of the Mqtt Client.
   /// Will be removed, use connectionStatus
   @Deprecated('Use ConnectionStatus, not this')
-  MqttConnectionState? get connectionState => connectionHandler != null
-      ? connectionHandler.connectionStatus.state
-      : MqttConnectionState.disconnected;
+  MqttConnectionState? get connectionState => connectionHandler != null ? connectionHandler.connectionStatus.state : MqttConnectionState.disconnected;
 
-  final MqttClientConnectionStatus _connectionStatus =
-      MqttClientConnectionStatus();
+  final MqttClientConnectionStatus _connectionStatus = MqttClientConnectionStatus();
 
   /// Gets the current connection status of the Mqtt Client.
   /// This is the connection state as above also with the broker return code.
   /// Set after every connection attempt.
-  MqttClientConnectionStatus? get connectionStatus => connectionHandler != null
-      ? connectionHandler.connectionStatus
-      : _connectionStatus;
+  MqttClientConnectionStatus? get connectionStatus => connectionHandler != null ? connectionHandler.connectionStatus : _connectionStatus;
 
   /// The connection message to use to override the default
   MqttConnectMessage? connectionMessage;
@@ -243,12 +234,10 @@ class MqttClient {
   events.EventBus? clientEventBus;
 
   /// The stream on which all subscribed topic updates are published to
-  Stream<List<MqttReceivedMessage<MqttMessage>>>? get updates =>
-      subscriptionsManager?.subscriptionNotifier;
+  Stream<List<MqttReceivedMessage<MqttMessage>>>? get updates => subscriptionsManager?.subscriptionNotifier;
 
   /// Common client connection method.
-  Future<MqttClientConnectionStatus?> connect(
-      [String? username, String? password]) async {
+  Future<MqttClientConnectionStatus?> connect([String? username, String? password]) async {
     // Protect against an incorrect instantiation
     if (!instantiationCorrect) {
       throw IncorrectInstantiationException();
@@ -272,18 +261,14 @@ class MqttClient {
 
     publishingManager = PublishingManager(connectionHandler, clientEventBus);
     publishingManager!.manuallyAcknowledgeQos1 = _manuallyAcknowledgeQos1;
-    subscriptionsManager = SubscriptionsManager(
-        connectionHandler, publishingManager, clientEventBus);
+    subscriptionsManager = SubscriptionsManager(connectionHandler, publishingManager, clientEventBus);
     subscriptionsManager!.onSubscribed = onSubscribed;
     subscriptionsManager!.onUnsubscribed = onUnsubscribed;
     subscriptionsManager!.onSubscribeFail = onSubscribeFail;
-    subscriptionsManager!.resubscribeOnAutoReconnect =
-        resubscribeOnAutoReconnect;
+    subscriptionsManager!.resubscribeOnAutoReconnect = resubscribeOnAutoReconnect;
     if (keepAlivePeriod != MqttClientConstants.defaultKeepAlive) {
-      MqttLogger.log(
-          'MqttClient::connect - keep alive is enabled with a value of $keepAlivePeriod seconds');
-      keepAlive = MqttConnectionKeepAlive(connectionHandler, clientEventBus,
-          keepAlivePeriod, disconnectOnNoResponsePeriod);
+      MqttLogger.log('MqttClient::connect - keep alive is enabled with a value of $keepAlivePeriod seconds');
+      keepAlive = MqttConnectionKeepAlive(connectionHandler, clientEventBus, keepAlivePeriod, disconnectOnNoResponsePeriod);
       if (pongCallback != null) {
         keepAlive!.pongCallback = pongCallback;
       }
@@ -306,13 +291,12 @@ class MqttClient {
   ///  supplied by the user.
   ///  Returns an MqttConnectMessage that can be used to connect to a
   ///  message broker if the user has not set one.
-  MqttConnectMessage getConnectMessage(String? username, String? password) =>
-      connectionMessage ??= MqttConnectMessage()
-          .withClientIdentifier(clientIdentifier)
-          // Explicitly set the will flag
-          .withWillQos(MqttQos.atMostOnce)
-          .authenticateAs(username, password)
-          .startClean();
+  MqttConnectMessage getConnectMessage(String? username, String? password) => connectionMessage ??= MqttConnectMessage()
+      .withClientIdentifier(clientIdentifier)
+      // Explicitly set the will flag
+      .withWillQos(MqttQos.atMostOnce)
+      .authenticateAs(username, password)
+      .startClean();
 
   /// Auto reconnect method, used to invoke a manual auto reconnect sequence.
   /// If [autoReconnect] is not set this method does nothing.
@@ -321,17 +305,14 @@ class MqttClient {
   /// auto reconnect will try indefinitely to reconnect to the broker.
   void doAutoReconnect({bool force = false}) {
     if (!autoReconnect) {
-      MqttLogger.log(
-          'MqttClient::doAutoReconnect - auto reconnect is not set, exiting');
+      MqttLogger.log('MqttClient::doAutoReconnect - auto reconnect is not set, exiting');
       return;
     }
 
     if (connectionStatus!.state != MqttConnectionState.connected || force) {
       // Fire a manual auto reconnect request.
-      final wasConnected =
-          connectionStatus!.state == MqttConnectionState.connected;
-      clientEventBus!
-          .fire(AutoReconnect(userRequested: true, wasConnected: wasConnected));
+      final wasConnected = connectionStatus!.state == MqttConnectionState.connected;
+      clientEventBus!.fire(AutoReconnect(userRequested: true, wasConnected: wasConnected));
     }
   }
 
@@ -360,17 +341,13 @@ class MqttClient {
   /// Returns The message identifer assigned to the message.
   /// Raises InvalidTopicException if the topic supplied violates the
   /// MQTT topic format rules.
-  int publishMessage(
-      String topic, MqttQos qualityOfService, typed.Uint8Buffer data,
-      {bool retain = false}) {
-    if (connectionHandler?.connectionStatus?.state !=
-        MqttConnectionState.connected) {
+  int publishMessage(String topic, MqttQos qualityOfService, typed.Uint8Buffer data, {bool retain = false}) {
+    if (connectionHandler?.connectionStatus?.state != MqttConnectionState.connected) {
       throw ConnectionException(connectionHandler?.connectionStatus?.state);
     }
     try {
       final pubTopic = PublicationTopic(topic);
-      return publishingManager!
-          .publish(pubTopic, qualityOfService, data, retain);
+      return publishingManager!.publish(pubTopic, qualityOfService, data, retain);
     } on Exception catch (e) {
       throw InvalidTopicException(e.toString(), topic);
     }
@@ -382,8 +359,7 @@ class MqttClient {
   }
 
   /// Gets the current status of a subscription.
-  MqttSubscriptionStatus getSubscriptionsStatus(String topic) =>
-      subscriptionsManager!.getSubscriptionsStatus(topic);
+  MqttSubscriptionStatus getSubscriptionsStatus(String topic) => subscriptionsManager!.getSubscriptionsStatus(topic);
 
   /// Disconnect from the broker.
   /// This is a hard disconnect, a disconnect message is sent to the
@@ -404,8 +380,7 @@ class MqttClient {
   /// a ping response expected from the broker has not arrived in the
   /// time period specified by [disconnectOnNoResponsePeriod].
   void disconnectOnNoPingResponse(DisconnectOnNoPingResponse event) {
-    MqttLogger.log(
-        'MqttClient::_disconnectOnNoPingResponse - disconnecting, no ping request response for $disconnectOnNoResponsePeriod seconds');
+    MqttLogger.log('MqttClient::_disconnectOnNoPingResponse - disconnecting, no ping request response for $disconnectOnNoResponsePeriod seconds');
     internalDisconnect();
   }
 
@@ -416,8 +391,7 @@ class MqttClient {
   void internalDisconnect() {
     // if we don't have a connection Handler we are already disconnected.
     if (connectionHandler == null) {
-      MqttLogger.log(
-          'MqttClient::internalDisconnect - not invoking disconnect, no connection handler');
+      MqttLogger.log('MqttClient::internalDisconnect - not invoking disconnect, no connection handler');
       return;
     }
     if (autoReconnect && connectionHandler.initialConnectionComplete) {
@@ -425,8 +399,7 @@ class MqttClient {
         // Fire an automatic auto reconnect request
         clientEventBus!.fire(AutoReconnect(userRequested: false));
       } else {
-        MqttLogger.log(
-            'MqttClient::internalDisconnect - not invoking auto connect, already in progress');
+        MqttLogger.log('MqttClient::internalDisconnect - not invoking auto connect, already in progress');
       }
     } else {
       // Unsolicited disconnect only if we are connected initially
@@ -446,6 +419,7 @@ class MqttClient {
       connectionHandler?.disconnect();
       disconnectOrigin = MqttDisconnectionOrigin.solicited;
     }
+    connectionHandler?.connection?.cancelListener();
     publishingManager?.published.close();
     publishingManager = null;
     subscriptionsManager = null;
@@ -469,18 +443,13 @@ class MqttClient {
     if (username != null) {
       MqttLogger.log("Authenticating with username '{$username}' "
           "and password '{$password}'");
-      if (username.trim().length >
-          MqttClientConstants.recommendedMaxUsernamePasswordLength) {
-        MqttLogger.log(
-            'MqttClient::checkCredentials - Username length (${username.trim().length}) '
+      if (username.trim().length > MqttClientConstants.recommendedMaxUsernamePasswordLength) {
+        MqttLogger.log('MqttClient::checkCredentials - Username length (${username.trim().length}) '
             'exceeds the max recommended in the MQTT spec. ');
       }
     }
-    if (password != null &&
-        password.trim().length >
-            MqttClientConstants.recommendedMaxUsernamePasswordLength) {
-      MqttLogger.log(
-          'MqttClient::checkCredentials - Password length (${password.trim().length}) '
+    if (password != null && password.trim().length > MqttClientConstants.recommendedMaxUsernamePasswordLength) {
+      MqttLogger.log('MqttClient::checkCredentials - Password length (${password.trim().length}) '
           'exceeds the max recommended in the MQTT spec. ');
     }
   }

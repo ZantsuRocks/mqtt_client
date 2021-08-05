@@ -13,9 +13,7 @@ class MqttServerWsConnection extends MqttServerConnection {
   MqttServerWsConnection(events.EventBus? eventBus) : super(eventBus);
 
   /// Initializes a new instance of the MqttConnection class.
-  MqttServerWsConnection.fromConnect(
-      String server, int port, events.EventBus eventBus)
-      : super(eventBus) {
+  MqttServerWsConnection.fromConnect(String server, int port, events.EventBus eventBus) : super(eventBus) {
     connect(server, port);
   }
 
@@ -37,8 +35,7 @@ class MqttServerWsConnection extends MqttServerConnection {
       throw NoConnectionException(message);
     }
     if (uri.scheme != 'ws' && uri.scheme != 'wss') {
-      final message =
-          'MqttWsConnection::connect - The URI supplied for the WS has '
+      final message = 'MqttWsConnection::connect - The URI supplied for the WS has '
           'an incorrect scheme - $server';
       throw NoConnectionException(message);
     }
@@ -46,25 +43,21 @@ class MqttServerWsConnection extends MqttServerConnection {
     uri = uri.replace(port: port);
 
     final uriString = uri.toString();
-    MqttLogger.log(
-        'MqttWsConnection::connect - WS URL is $uriString, protocols are $protocols');
+    MqttLogger.log('MqttWsConnection::connect - WS URL is $uriString, protocols are $protocols');
     try {
       // Connect and save the socket.
-      WebSocket.connect(uriString,
-              protocols: protocols.isNotEmpty ? protocols : null)
-          .then((dynamic socket) {
+      WebSocket.connect(uriString, protocols: protocols.isNotEmpty ? protocols : null).then((dynamic socket) {
         client = socket;
         readWrapper = ReadWrapper();
         messageStream = MqttByteBuffer(typed.Uint8Buffer());
-        _startListening();
+        listenerSub = _startListening();
         completer.complete();
       }).catchError((dynamic e) {
         onError(e);
         completer.completeError(e);
       });
     } on Exception {
-      final message =
-          'MqttWsConnection::connect - The connection to the message broker '
+      final message = 'MqttWsConnection::connect - The connection to the message broker '
           '{$uriString} could not be made.';
       throw NoConnectionException(message);
     }
@@ -81,14 +74,12 @@ class MqttServerWsConnection extends MqttServerConnection {
     try {
       uri = Uri.parse(server);
     } on Exception {
-      final message =
-          'MqttWsConnection::connectAuto - The URI supplied for the WS '
+      final message = 'MqttWsConnection::connectAuto - The URI supplied for the WS '
           'connection is not valid - $server';
       throw NoConnectionException(message);
     }
     if (uri.scheme != 'ws' && uri.scheme != 'wss') {
-      final message =
-          'MqttWsConnection::connectAuto - The URI supplied for the WS has '
+      final message = 'MqttWsConnection::connectAuto - The URI supplied for the WS has '
           'an incorrect scheme - $server';
       throw NoConnectionException(message);
     }
@@ -96,13 +87,10 @@ class MqttServerWsConnection extends MqttServerConnection {
     uri = uri.replace(port: port);
 
     final uriString = uri.toString();
-    MqttLogger.log(
-        'MqttWsConnection::connectAuto - WS URL is $uriString, protocols are $protocols');
+    MqttLogger.log('MqttWsConnection::connectAuto - WS URL is $uriString, protocols are $protocols');
     try {
       // Connect and save the socket.
-      WebSocket.connect(uriString,
-              protocols: protocols.isNotEmpty ? protocols : null)
-          .then((dynamic socket) {
+      WebSocket.connect(uriString, protocols: protocols.isNotEmpty ? protocols : null).then((dynamic socket) {
         client = socket;
         _startListening();
         completer.complete();
@@ -111,8 +99,7 @@ class MqttServerWsConnection extends MqttServerConnection {
         completer.completeError(e);
       });
     } on Exception {
-      final message =
-          'MqttWsConnection::connectAuto - The connection to the message broker '
+      final message = 'MqttWsConnection::connectAuto - The connection to the message broker '
           '{$uriString} could not be made.';
       throw NoConnectionException(message);
     }
@@ -134,8 +121,7 @@ class MqttServerWsConnection extends MqttServerConnection {
   void onDone() {
     _disconnect();
     if (onDisconnected != null) {
-      MqttLogger.log(
-          'MqttWsConnection::::onDone - calling disconnected callback');
+      MqttLogger.log('MqttWsConnection::::onDone - calling disconnected callback');
       onDisconnected!();
     }
   }

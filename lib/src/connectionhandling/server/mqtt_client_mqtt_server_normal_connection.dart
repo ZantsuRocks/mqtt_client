@@ -13,9 +13,7 @@ class MqttServerNormalConnection extends MqttServerConnection {
   MqttServerNormalConnection(events.EventBus? eventBus) : super(eventBus);
 
   /// Initializes a new instance of the MqttConnection class.
-  MqttServerNormalConnection.fromConnect(
-      String server, int port, events.EventBus eventBus)
-      : super(eventBus) {
+  MqttServerNormalConnection.fromConnect(String server, int port, events.EventBus eventBus) : super(eventBus) {
     connect(server, port);
   }
 
@@ -30,22 +28,20 @@ class MqttServerNormalConnection extends MqttServerConnection {
         client = socket;
         readWrapper = ReadWrapper();
         messageStream = MqttByteBuffer(typed.Uint8Buffer());
-        _startListening();
+        listenerSub = _startListening();
         completer.complete();
       }).catchError((dynamic e) {
         onError(e);
         completer.completeError(e);
       });
     } on SocketException catch (e) {
-      final message =
-          'MqttNormalConnection::connect - The connection to the message broker '
+      final message = 'MqttNormalConnection::connect - The connection to the message broker '
           '{$server}:{$port} could not be made. Error is ${e.toString()}';
       completer.completeError(e);
       throw NoConnectionException(message);
     } on Exception catch (e) {
       completer.completeError(e);
-      final message =
-          'MqttNormalConnection::Connect - The connection to the message '
+      final message = 'MqttNormalConnection::Connect - The connection to the message '
           'broker {$server}:{$port} could not be made.';
       throw NoConnectionException(message);
     }
@@ -68,15 +64,13 @@ class MqttServerNormalConnection extends MqttServerConnection {
         completer.completeError(e);
       });
     } on SocketException catch (e) {
-      final message =
-          'MqttNormalConnection::connectAuto - The connection to the message broker '
+      final message = 'MqttNormalConnection::connectAuto - The connection to the message broker '
           '{$server}:{$port} could not be made. Error is ${e.toString()}';
       completer.completeError(e);
       throw NoConnectionException(message);
     } on Exception catch (e) {
       completer.completeError(e);
-      final message =
-          'MqttNormalConnection::ConnectAuto - The connection to the message '
+      final message = 'MqttNormalConnection::ConnectAuto - The connection to the message '
           'broker {$server}:{$port} could not be made.';
       throw NoConnectionException(message);
     }

@@ -13,8 +13,7 @@ class MqttBrowserConnection extends MqttConnectionBase {
   MqttBrowserConnection(clientEventBus) : super(clientEventBus);
 
   /// Initializes a new instance of the MqttBrowserConnection class.
-  MqttBrowserConnection.fromConnect(server, port, clientEventBus)
-      : super(clientEventBus) {
+  MqttBrowserConnection.fromConnect(server, port, clientEventBus) : super(clientEventBus) {
     connect(server, port);
   }
 
@@ -33,26 +32,24 @@ class MqttBrowserConnection extends MqttConnectionBase {
   }
 
   /// Create the listening stream subscription and subscribe the callbacks
-  void _startListening() {
+  StreamSubscription<Uint8List>? _startListening() {
     MqttLogger.log('MqttBrowserConnection::_startListening');
     try {
       client.onClose.listen((e) {
-        MqttLogger.log(
-            'MqttBrowserConnection::_startListening - websocket is closed');
+        MqttLogger.log('MqttBrowserConnection::_startListening - websocket is closed');
         onDone();
       });
       client.onMessage.listen((MessageEvent e) {
         _onData(e.data);
       });
       client.onError.listen((e) {
-        MqttLogger.log(
-            'MqttBrowserConnection::_startListening - websocket has errored');
+        MqttLogger.log('MqttBrowserConnection::_startListening - websocket has errored');
         onError(e);
       });
     } on Exception catch (e) {
-      MqttLogger.log(
-          'MqttBrowserConnection::_startListening - exception raised $e');
+      MqttLogger.log('MqttBrowserConnection::_startListening - exception raised $e');
     }
+    return null;
   }
 
   /// OnData listener callback
@@ -74,8 +71,7 @@ class MqttBrowserConnection extends MqttConnectionBase {
       try {
         msg = MqttMessage.createFrom(messageStream);
       } on Exception {
-        MqttLogger.log(
-            'MqttBrowserConnection::_ondata - message is not yet valid, '
+        MqttLogger.log('MqttBrowserConnection::_ondata - message is not yet valid, '
             'waiting for more data ...');
         messageIsValid = false;
       }
@@ -85,19 +81,16 @@ class MqttBrowserConnection extends MqttConnectionBase {
       }
       if (messageIsValid) {
         messageStream.shrink();
-        MqttLogger.log(
-            'MqttBrowserConnection::_onData - message received ', msg);
+        MqttLogger.log('MqttBrowserConnection::_onData - message received ', msg);
         if (!clientEventBus!.streamController.isClosed) {
           if (msg!.header!.messageType == MqttMessageType.connectAck) {
             clientEventBus!.fire(ConnectAckMessageAvailable(msg));
           } else {
             clientEventBus!.fire(MessageAvailable(msg));
           }
-          MqttLogger.log(
-              'MqttBrowserConnection::_onData - message available event fired');
+          MqttLogger.log('MqttBrowserConnection::_onData - message available event fired');
         } else {
-          MqttLogger.log(
-              'MqttBrowserConnection::_onData - WARN - message available event not fired, event bus is closed');
+          MqttLogger.log('MqttBrowserConnection::_onData - WARN - message available event not fired, event bus is closed');
         }
       }
     }

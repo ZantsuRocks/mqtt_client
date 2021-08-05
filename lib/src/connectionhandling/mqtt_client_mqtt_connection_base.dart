@@ -21,6 +21,10 @@ class MqttConnectionBase {
   @protected
   dynamic client;
 
+  /// The sub to kill befor destroying the socket.
+  @protected
+  dynamic listenerSub;
+
   /// The read wrapper
   @protected
   ReadWrapper? readWrapper;
@@ -56,8 +60,7 @@ class MqttConnectionBase {
   void onError(dynamic error) {
     _disconnect();
     if (onDisconnected != null) {
-      MqttLogger.log(
-          'MqttConnectionBase::_onError - calling disconnected callback');
+      MqttLogger.log('MqttConnectionBase::_onError - calling disconnected callback');
       onDisconnected!();
     }
   }
@@ -67,8 +70,7 @@ class MqttConnectionBase {
   void onDone() {
     _disconnect();
     if (onDisconnected != null) {
-      MqttLogger.log(
-          'MqttConnectionBase::_onDone - calling disconnected callback');
+      MqttLogger.log('MqttConnectionBase::_onDone - calling disconnected callback');
       onDisconnected!();
     }
   }
@@ -89,5 +91,10 @@ class MqttConnectionBase {
     } else {
       onDone();
     }
+  }
+
+  /// Listener cleanup
+  void cancelListener() {
+    if (listenerSub != null) listenerSub.cancel();
   }
 }
